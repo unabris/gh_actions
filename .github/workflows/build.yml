@@ -1,0 +1,24 @@
+name: Build
+
+on:
+  workflow_call:
+    inputs:
+      RUBY_VERSION:
+        required: false
+        type: string
+
+jobs:
+  build:
+    name: Pass input and secrets to my-action
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.7.3
+          bundler-cache: true
+      - uses: borales/actions-yarn@v2.0.0
+        with:
+          cmd: install
