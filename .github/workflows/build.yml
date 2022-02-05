@@ -1,24 +1,90 @@
-name: Build
+name: CI
 
 on:
   workflow_call:
     inputs:
-      RUBY_VERSION:
-        required: false
+      runs_on:
+        description: Platform to execute on
         type: string
+        default: ubuntu-latest
+      ruby_version:
+        description: Version of Ruby to use
+        type: string
+        default: 3.1.0
+      node_version:
+        description: Version of Node to use
+        type: string
+        default: 14
+      run_tests:
+        description: Run tests
+        type: boolean
+        default: true
+      rubocop_config:
+        description: Rubocop config file
+        type: string
+        default: .rubocop.yml
+    secrets:
+      github_token:
+        description: Rubocop config file
+        type: string
+
+env:
+  BUNDLE_GITHUB__COM: ${{ secrets.github_token }}
 
 jobs:
   build:
-    name: Pass input and secrets to my-action
-    runs-on: ubuntu-latest
+    name: Build
+    runs-on: ${{ inputs.runs_on }}
     steps:
-      - name: Checkout the code
-        uses: actions/checkout@v2
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 2.7.3
+          ruby-version: ${{ inputs.ruby_version }}
           bundler-cache: true
-      - uses: borales/actions-yarn@v2.0.0
+      - uses: actions/setup-node@v2
         with:
-          cmd: install
+          node-version: ${{ inputs.node_version }}
+          cache: 'yarn'
+      - run: yarn install
+
+  eslint:
+    name: ESLint
+    needs:
+      - build
+    runs-on: ${{ inputs.runs_on }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ inputs.node_version }}
+          cache: 'yarn'
+      - run: yarn install
+      - run: npx eslint app --ext .js
+
+  sasslint:
+    name: Sass Lint
+    needs:
+      - build
+    runs-on: ${{ inputs.runs_on }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ inputs.node_version }}
+          cache: 'yarn'
+      - run: yarn install
+      - run: npx sass-lint -v -q
+
+  rubocop:
+    name: Rubocop
+    needs:
+      - build
+    runs-on: ${{ inputs.runs_on }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ inputs.ruby_version }}
+          bundler-cache: true
+      - name: Rubocop
+        run: bundle exec rubocop --config ${{ inputs.rubocop_config }}
