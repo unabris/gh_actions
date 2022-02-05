@@ -26,7 +26,6 @@ on:
     secrets:
       bundle_github_token:
         description: Rubocop config file
-        type: string
 
 env:
   BUNDLE_GITHUB__COM: ${{ secrets.bundle_github_token }}
