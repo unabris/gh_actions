@@ -24,12 +24,12 @@ on:
         type: string
         default: .rubocop.yml
     secrets:
-      github_token:
+      bundle_github_token:
         description: Rubocop config file
         type: string
 
 env:
-  BUNDLE_GITHUB__COM: ${{ secrets.github_token }}
+  BUNDLE_GITHUB__COM: ${{ secrets.bundle_github_token }}
 
 jobs:
   build:
